@@ -25,7 +25,7 @@ const OTPSchema = new mongoose.Schema({
       const mailResponse  = await mailSender(email,"Verification Email from: BrightEdge | CodeCrafters • Your Learning Partner",otp);
       console.log("Email  sent Successfully",mailResponse);
      }catch(error){
-        console.log("Error occurre while sending email"+error);
+        console.log("Error occur while sending email"+error);
          throw error;
      }
  }
