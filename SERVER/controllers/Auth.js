@@ -9,7 +9,6 @@ require("dotenv").config();
 
 
 //SenT_otp
-
 exports.sendOTP = async (req, res) => {
   try {
     //fetch email from request body
@@ -71,9 +70,9 @@ exports.sendOTP = async (req, res) => {
   }
 };
 
+
+
 //SignUp
-
-
 exports.signUp = async(req,res) =>{
     try{
 
@@ -260,7 +259,7 @@ exports.login =  async(req,res) =>{
 
 
 //changePassword 
-//HW
+
 exports.changePassword =  async(req,res)=>{
   //step1. get data from request body
 
