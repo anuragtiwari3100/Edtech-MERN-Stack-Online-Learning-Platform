@@ -4,6 +4,7 @@ const optGenerator = require("otp-generator");
 const { Profiler } = require("react");
 const bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
+const mailSender = require("../utils/mailSender");
 require("dotenv").config();
 
 
@@ -259,21 +260,88 @@ exports.login =  async(req,res) =>{
 
 
 //changePassword 
-
 exports.changePassword =  async(req,res)=>{
-  //step1. get data from request body
+     try{
+        //Step 2 get oldPassWord , new password , confirmNew pass
 
-  //Step 2 get oldPassWord , new password , confirmNew pass
+    const {oldPassword , newPassword , confirmPassword}  = req.body;
 
-  //Step.3 Validation
+      //Step.3 Validation
+    if(!oldPassword || !newPassword || !confirmPassword){
+      return res.status(403).json({
+        success:false,
+        message:'All fields are required'
+      })
+    }
 
 
-  //step4 Update pass in Db
+     //get the user
+     const userDetails = await User.findById(req.user.id);
+
+     //validate old password entered correct or not
+     const isPasswordMatch = await bcrypt.compare(
+      oldPassword,
+      userDetails.password
+     )
+
+     //if old password does not matched 
+     if(!isPasswordMatch){
+      return res.status(401).json({
+        success:false,
+        message:"Old  password is Incorrect"
+      });
+     }
 
 
-  //Step 5.   Send mail - password updated
+     //check if both  the password matched
+     if(newPassword !== confirmPassword){
+           return res.status(403).json({
+                success: false,
+                message: 'The password and confirm password do not match'
+            })
+    }
 
-  //Step6. return response
+    //hash password 
+    const hashedPassword = await bcrypt.hash(newPassword,10);
+
+    //update in DB
+    const updatedUserDetails = await User.findByIdAndUpdate(req.user.id,
+      {password:hashedPassword},
+      {new:true}
+    );
+
+    //send  email
+    try{
+      const emailResponse = await mailSender(
+        updatedUserDetails.email,
+        'Password for your account has been updated',
+        password    ///problem here
+      )
+    } catch (error) {
+            console.error("Error occurred while sending email:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Error occurred while sending email",
+                error: error.message,
+            });
+        }
+
+
+            // return success response
+        res.status(200).json({
+            success: true,
+            message: 'Password changed successfully'
+        });
+     } catch (error) {
+        console.log('Error while changing passowrd');
+        console.log(error)
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            messgae: 'Error while changing passowrd'
+        })
+    }
+ 
 
 }
 
