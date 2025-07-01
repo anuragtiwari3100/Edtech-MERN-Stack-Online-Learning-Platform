@@ -16,6 +16,7 @@ exports.updateProfile =  async(req,res)=>{
                 message:'All fields are required',
             });
         }
+        
         //find  profile
         const userDetails = await User.findById(id);
         const profileId = userDetails.additionalDetails;
@@ -48,37 +49,85 @@ exports.updateProfile =  async(req,res)=>{
 
 //to can we schedule the business logic of thhis hanlder untion
 //delete Account
-exports.deleteAccount = async (req,res)=>{
-    try{
+exports.deleteAccount = async (req, res) => {
+    try {
+        // extract user id
+        const userId = req.user.id;
+        // console.log('userId = ', userId)
 
-        //get id
-        const id = req.user.id;
-        //validation
-        const userDetails = await User.findById(id);
-        if(!userDetails){
-            return res.status(400).json({
-                success:false,
-                message:'User not found',
+        // validation
+        const userDetails = await User.findById(userId);
+        if (!userDetails) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
             });
         }
-        //delete profile
-        await Profile.findByIdAndDelete({_id:userDetails.additionalDetails});
-         //TODO:- unenrolled User  from  all enrolled corses
-         //Todo :- schedule a request , instead of deleting immediately
-        //delete user
-        await User.findByIdAndDelete({_id:id});
 
-        //return response
-        return res.status(200).json({
-            success:false,
-            message:'User Deleted Successfully',
+        // delete user profile picture From Cloudinary
+        await deleteResourceFromCloudinary(userDetails.image);
+
+        const userEnrolledCoursesId = userDetails.courses
+        console.log('userEnrolledCourses ids = ', userEnrolledCoursesId)
+
+        for (const courseId of userEnrolledCoursesId) {
+            await Course.findByIdAndUpdate(courseId, {
+                $pull: { studentsEnrolled: userId }
+            })
+        }
+
+        // first - delete profie (profileDetails)
+        await Profile.findByIdAndDelete(userDetails.additionalDetails);
+
+        // second - delete account
+        await User.findByIdAndDelete(userId);
+
+
+        // sheduale this deleting account , crone job
+
+        // return response
+        res.status(200).json({
+            success: true,
+            message: 'Account deleted successfully'
         })
-    }catch(error){
-       return res.status(500).json({
-        success:false,
-        message:"User can not be  deleted successfully",
-       })
-        
+    }
+    catch (error) {
+        console.log('Error while updating profile');
+        console.log(error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            message: 'Error while deleting profile'
+        })
+    }
+}
+
+
+//  get details of user
+exports.getUserDetails = async (req, res) => {
+    try {
+        // extract userId
+        const userId = req.user.id;
+        console.log('id - ', userId);
+
+        // get user details
+        const userDetails = await User.findById(userId).populate('additionalDetails').exec();
+
+        // return response
+        res.status(200).json({
+            success: true,
+            data: userDetails,
+            message: 'User data fetched successfully'
+        })
+    }
+    catch (error) {
+        console.log('Error while fetching user details');
+        console.log(error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            message: 'Error while fetching user details'
+        })
     }
 }
 
