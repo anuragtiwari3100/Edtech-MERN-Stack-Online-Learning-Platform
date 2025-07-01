@@ -102,38 +102,34 @@ exports.createCourse = async(req,res)=>{
 
 
 //getAllCourse handler function
- 
-exports.showAllCourses  =  async(req,res)=>{
-     try{
-/**
-           const allCourses   = await Course.find({},{
-            courseName:true,
-            price:true,
-            thumbnail:true,
-            instructor:true,
-           ratingAndReviews:true,
-           studentEnrolled:true,                                            
-        }).populate("instructor").exec();
- */
-   
-    //TODO:Change the below statement incrementally
-   const allCourses   = await Course.find({});
-
+ exports.getAllCourses = async (req, res) => {
+    try {
+        const allCourses = await Course.find({},
+            {
+                courseName: true, courseDescription: true, price: true, thumbnail: true, instructor: true,
+                ratingAndReviews: true, studentsEnrolled: true
+            })
+            .populate({
+                path: 'instructor',
+                select: 'firstName lastName email image'
+            })
+            .exec();
 
         return res.status(200).json({
-            success:true,
-            message:'Data for  all courses fetched successfully',
-            data:allCourses,
+            success: true,
+            data: allCourses,
+            message: 'Data for all courses fetched successfully'
+        });
+    }
 
+    catch (error) {
+        console.log('Error while fetching data of all courses');
+        console.log(error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            message: 'Error while fetching data of all courses'
         })
-
-     }catch(error){
-         console.log(error);
-         return res.status(500).json({
-            success:false,
-            message:'Could not fetch Course data',
-            error:error.message,
-         })
-
-     }
+    }
 }
+
