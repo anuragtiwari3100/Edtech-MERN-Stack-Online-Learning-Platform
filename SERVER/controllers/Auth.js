@@ -259,65 +259,67 @@ exports.login =  async(req,res) =>{
 
 
 
-//changePassword 
-exports.changePassword =  async(req,res)=>{
-     try{
-        //Step 2 get oldPassWord , new password , confirmNew pass
+// //changePassword 
+exports.changePassword = async (req, res) => {
+    try {
+        // extract data
+        const { oldPassword, newPassword, confirmNewPassword } = req.body;
 
-    const {oldPassword , newPassword , confirmPassword}  = req.body;
+        // validation
+        if (!oldPassword || !newPassword || !confirmNewPassword) {
+            return res.status(403).json({
+                success: false,
+                message: 'All fileds are required'
+            });
+        }
 
-      //Step.3 Validation
-    if(!oldPassword || !newPassword || !confirmPassword){
-      return res.status(403).json({
-        success:false,
-        message:'All fields are required'
-      })
-    }
+        // get user
+        const userDetails = await User.findById(req.user.id);
 
+        // validate old passowrd entered correct or not
+        const isPasswordMatch = await bcrypt.compare(
+            oldPassword,
+            userDetails.password
+        )
 
-     //get the user
-     const userDetails = await User.findById(req.user.id);
+        // if old password not match 
+        if (!isPasswordMatch) {
+            return res.status(401).json({
+                success: false, message: "Old password is Incorrect"
+            });
+        }
 
-     //validate old password entered correct or not
-     const isPasswordMatch = await bcrypt.compare(
-      oldPassword,
-      userDetails.password
-     )
-
-     //if old password does not matched 
-     if(!isPasswordMatch){
-      return res.status(401).json({
-        success:false,
-        message:"Old  password is Incorrect"
-      });
-     }
-
-
-     //check if both  the password matched
-     if(newPassword !== confirmPassword){
-           return res.status(403).json({
+        // check both passwords are matched
+        if (newPassword !== confirmNewPassword) {
+            return res.status(403).json({
                 success: false,
                 message: 'The password and confirm password do not match'
             })
-    }
+        }
 
-    //hash password 
-    const hashedPassword = await bcrypt.hash(newPassword,10);
 
-    //update in DB
-    const updatedUserDetails = await User.findByIdAndUpdate(req.user.id,
-      {password:hashedPassword},
-      {new:true}
-    );
+        // hash password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    //send  email
-    try{
-      const emailResponse = await mailSender(
-        updatedUserDetails.email,
-        'Password for your account has been updated',
-        password    ///problem here
-      )
-    } catch (error) {
+        // update in DB
+        const updatedUserDetails = await User.findByIdAndUpdate(req.user.id,
+            { password: hashedPassword },
+            { new: true });
+
+
+        // send email
+        try {
+            const emailResponse = await mailSender(
+                updatedUserDetails.email,
+                'Password for your account has been updated',
+                passwordUpdated(
+                    updatedUserDetails.email,
+                    `Password updated successfully for ${updatedUserDetails.firstName} ${updatedUserDetails.lastName}`
+                )
+            );
+            // console.log("Email sent successfully:", emailResponse);
+        }
+        catch (error) {
             console.error("Error occurred while sending email:", error);
             return res.status(500).json({
                 success: false,
@@ -327,12 +329,14 @@ exports.changePassword =  async(req,res)=>{
         }
 
 
-            // return success response
+        // return success response
         res.status(200).json({
             success: true,
-            message: 'Password changed successfully'
+            mesage: 'Password changed successfully'
         });
-     } catch (error) {
+    }
+
+    catch (error) {
         console.log('Error while changing passowrd');
         console.log(error)
         res.status(500).json({
@@ -341,7 +345,4 @@ exports.changePassword =  async(req,res)=>{
             messgae: 'Error while changing passowrd'
         })
     }
- 
-
 }
-
