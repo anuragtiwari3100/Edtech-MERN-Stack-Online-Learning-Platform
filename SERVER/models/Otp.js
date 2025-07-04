@@ -13,9 +13,9 @@ const OTPSchema = new mongoose.Schema({
      createdAt:{
         type:Date,
         default:Date.now(), 
-        expires: 5*60,
+        expires: 5*60,  //doc auto delete ho jayega  after 3 min of its creation
      }
-})
+});
 
 
 // function -> for sending email
@@ -32,8 +32,15 @@ const OTPSchema = new mongoose.Schema({
 
 
  OTPSchema.pre("save", async function(next){
-    
+    //------------------------------------------
    await sendVerificationEmail(this.email,this.otp);
+   //------------------------------------------
+
+   
+       if (this.isNew) {
+        await sendVerificationEmail(this.email, this.otp);
+    }
+
    next();
  })
 
