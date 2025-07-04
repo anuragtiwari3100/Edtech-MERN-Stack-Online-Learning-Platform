@@ -25,4 +25,4 @@
  });
 
 
- module.exports = ("RatingAndReview",ratingAndReview)
+ module.exports = mongoose.model("RatingAndReview",ratingAndReview)

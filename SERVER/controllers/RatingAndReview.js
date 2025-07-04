@@ -13,13 +13,23 @@ exports.createRating = async (req, res) =>{
 
            //fetch data from teh request body
             const{rating,review,courseId} = req.body;
-           //check if user is enrolled or not
-           const  courseDetails =  await Course.findOne(
-          {_id:courseId,
-            studentEnrolled:{$elementMatch:{$eq:userId}},
 
-          }
-        )
+               // validation
+        if (!rating || !review || !courseId) {
+            return res.status(401).json({
+                success: false,
+                message: "All fileds are required"
+            });
+        }
+
+
+      // check user is enrollded in course ?
+     const courseDetails = await Course.findOne({ _id: courseId },
+            {
+                studentsEnrolled: { $elemMatch: { $eq: userId } }
+            });
+
+
 
           if(!courseDetails){
             return res.status(404).json({
@@ -29,22 +39,24 @@ exports.createRating = async (req, res) =>{
           }
            //check if user already reviews the course
            const alreadyReviwed =  await RatingAndReview.findOne({
-            userId:userId,
+            course:userId,
             course:courseId,
            });
         
            if(alreadyReviwed){
             return res.status(403).json({
                 success:false,
-                message: "You have already reviewed this course",
+                message: 'Course is already reviewed by the user'
             }) 
            }
+
               //create rating and review
               const  ratingReview = await RatingAndReview.create({
                 rating,review,
                 course:courseId,
                 user:userId
               });
+
            //update course with rating/reviews
           const updatedCourseDetails = await Course.findByIdAndUpdate({_id:courseId},
             {
@@ -53,27 +65,25 @@ exports.createRating = async (req, res) =>{
                 }
              },
                {new:true});
-          console.log(updatedCourseDetails);
+        //   console.log(updatedCourseDetails);
            //return response
        return res.status(200).json({
         success:true,
         message:"Rating and Review created Successfully",
-        ratingReview,
        })
 
 
 
-    }catch(error){
+    }catch (error) {
+        console.log('Error while creating rating and review');
         console.log(error);
         return res.status(500).json({
-            success:false,
-            message:error.message
+            success: false,
+            error: error.message,
+            message: 'Error while creating rating and review',
         })
-
     }
 }
-
-
 
 //getAvgRating
 exports.getAverageRating = async (req,res)=>{
@@ -122,10 +132,8 @@ exports.getAverageRating = async (req,res)=>{
     }
 }
 
-
-
 //getAllRatingAndReviews
-exports.getAllRating = async(req,res)=>{
+exports.getAllRatingReview = async(req,res)=>{
      
     try{
         //get all rating and reviews
@@ -148,11 +156,12 @@ exports.getAllRating = async(req,res)=>{
                         data:allReviews
                      });
     }catch(error){
+        console.log('Error while fetching all ratings');
         console.log(error);
         return res.status(500).json({
-        success:false,
-        message:error.message,
-
+            success: false,
+            error: error.message,
+            message: 'Error while fetching all ratings',
         })
     }
 }

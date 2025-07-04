@@ -1,5 +1,6 @@
-const Section = require("../models/Section");
-const Course = require("../models/Course");
+const Course = require('../models/Course');
+const Section = require('../models/section');
+
 
 exports.createSection = async (req,res)=>{
     try{
@@ -18,7 +19,7 @@ exports.createSection = async (req,res)=>{
         const  newSection = await  Section.create({sectionName});
 
         //update course with section objectId
-       const updatedCourseDetails = await Course.findByIdAndUpdate(
+       const updatedCourse = await Course.findByIdAndUpdate(
              courseId,
              {
                 $push:{
@@ -27,26 +28,34 @@ exports.createSection = async (req,res)=>{
              },
              {new:true}
        );
-       //HW :use populate to replace section sub section in the udated course details
+
+
+               const updatedCourseDetails = await Course.findById(courseId)
+            .populate({
+                path: 'courseContent',
+                populate: {
+                    path: 'subSection'
+                }
+
+            })
 
         //return response
         return res.status(200).json({
             success:true,
+            updatedCourseDetails,
             message:"Section created successfully",
         })
 
-    }catch(error){
+    }catch (error) {
+        console.log('Error while creating section');
         console.log(error);
-        return res.status(500).json({
-            success:false,
-            message:"Unable to create  Section, please try again",
-            error:error.message,
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            message: 'Error while creating section'
         })
     }
 }
-
-
-
 
 exports.updateSection = async (req, res) => {
     try {
@@ -90,7 +99,7 @@ exports.updateSection = async (req, res) => {
 }
 
 
-
+//Delete Section 
 exports.deleteSection = async (req, res) => {
     try {
         const { sectionId, courseId } = req.body;

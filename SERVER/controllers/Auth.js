@@ -1,12 +1,14 @@
-const User = require("../models/User");
+const User = require("../models/user");
+const Profile = require('./../models/profile');
 const OTP = require("../models/OTP");
 const optGenerator = require("otp-generator");
-const { Profiler } = require("react");
 const bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
 const mailSender = require("../utils/mailSender");
 require("dotenv").config();
-
+const otpTemplate = require('../mail/templates/emailVerificationTemplate');
+const { passwordUpdated } = require("../mail/templates/passwordUpdate");
+const cookie = require('cookie');
 
 
 //SenT_otp
@@ -33,8 +35,16 @@ exports.sendOTP = async (req, res) => {
         specialChars:false,
     })
 
-    console.log("OTP generated: "+otp);
 
+    // console.log("OTP generated: "+otp);
+       const name = email.split('@')[0].split('.').map(part => part.replace(/\d+/g, '')).join(' ');
+      console.log(name);
+
+          // send otp in mail
+        await mailSender(email, 'OTP Verification Email', otpTemplate(otp, name));
+
+
+    //-------------------------------------------
    //Check weather the otp is Unique or not
    const result = await otp.findOne({otp:otp});
    while(result){
@@ -45,13 +55,17 @@ exports.sendOTP = async (req, res) => {
     })
     result = await OTP.findOne({otp:otp});
    }
+
+
+   //-------------------------------------------
  
 
-   const  otpPayload = {email,otp}; 
+  
 
-   //creating an  entry into the database for the otp
-   const optBody  = await OTP.create(otpPayload);
-   console.log(otpPayload);
+   // create an entry for otp in DB
+        const otpBody = await OTP.create({ email, otp });
+        // console.log('otpBody - ', otpBody)
+
 
    //return response successful
     res.status(200).json({
@@ -112,8 +126,8 @@ exports.signUp = async(req,res) =>{
 
 
         //Step.3. check user already exists or not
-        const   existingUser = await User.findOne({email});
-    if(existingUser){
+        const   checkUserAlreadyExits = await User.findOne({email});
+    if(checkUserAlreadyExits){
         return res.status(400).json({
              success:false,
                 message:"User is already registered. Please log in instead.",
@@ -123,33 +137,26 @@ exports.signUp = async(req,res) =>{
 
         //Step 4.find the most recent otp for the   user
         const recentOtp = await OTP.find({email}).sort({createdAt:-1}).limit(1);
-         console.log(recentOtp);
+        //  console.log(recentOtp);
 
-
-           if(recentOtp.length == 0){
-
-             //Simple - otp  is not found
+             // if otp not found
+       if (!recentOtp || recentOtp.length == 0) {
             return res.status(400).json({
-            success:false,
-            message: "Oops! We couldn’t find an OTP. Try again in a moment."
-           });
+                success: false,
+                message: 'Otp not found in DB, please try again'
+            });
+        } else if (otp !== recentOtp.otp) {
+            // otp invalid
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid Otp'
+            })
         }
-        
-
-        //Step 4.validate otp
-           else if(otp !==  recentOtp.otp){
-              //OTP inVAlid  hai  
-              return res.status(400).json({
-                success:false,
-                message: "Invalid OTP. Please try again.",
-              })
-
-           }
           
         //Step 5.hash password
         const   hashedPassword = await bcrypt.hash(password,10);
 
-
+        // additionDetails
 const profileDetails =await  Profile.create({
     gender:null,
     dateOfBirth:null,
@@ -157,15 +164,21 @@ const profileDetails =await  Profile.create({
     contactNumber:null
 });
 
+
+   
+        let approved = "";
+        approved === "Instructor" ? (approved = false) : (approved = true);
+
         // Step 6.create an entry in the db 
-          const user = await User.create({
+          const userData = await User.create({
             firstName,
             lastName,
             email,
             contactNumber,
             password:hashedPassword,
-            accountType,
-            additionalDetails:profileDetails,
+            accountType:accountType,
+            additionalDetails:profileDetails._id,
+            approved:approved,
             image:`https://api.dicebear.com/5.x/initials/svg?seed=${firstName} ${lastName}`,
 
 
@@ -178,12 +191,13 @@ const profileDetails =await  Profile.create({
           return res.status(200).json({
             success:true,
             message: 'User is registered Successfully',
-            user
           })
     }catch(error){
+         console.log('Error while registering user (signup)');
          console.log(error);
-         return res.status(500).json({
+         return res.status(401).json({
           success:false,
+          error: error.message,
           message:"User cannot be registered . Please try again",
          })
     }
@@ -199,7 +213,7 @@ exports.login =  async(req,res) =>{
 
       // step 2 .Validation of Data
       if(!email || !password){
-        return res.status(403).json({
+        return res.status(400).json({
           success:false,
           message:"All fields are required , please try again",
       });
@@ -218,28 +232,32 @@ exports.login =  async(req,res) =>{
         const payload ={
           email : user.email,
           id :user._id,
-          role : user.accountType,
+          accountType:user.accountType// ye hame healp karega to check wather  user ke pass acces hai use route ke lie , while autherization
         }
+        
+            // Generate token
         const token = jwt.sign(payload,process.env.JWT_SECRET,{
           expiresIn:"2h",
         });
+         user = user.toObject();
         user.token = token;
-        user.password = undefined;
+        user.password = undefined; //hamen password object se remmove kia hai DB se nahi
       
       // step 5 create cookie and send the response
 
-      const options = {
+      const cookieOptions = {
         expires : new Date(Date.now()+ 3*24*60*60*1000),
         httpOnly:true
       }
 
-      res.cookie("token",token,options).status(200).json({
+      res.cookie("token",token,cookieOptions).status(200).json({
         success:true,
         token,
         user,
         message:"User logged in successfully",
       })
     }
+
     else{
       return res.status(401).json({
         success:false,
@@ -249,6 +267,7 @@ exports.login =  async(req,res) =>{
 
      
    }catch(error){
+    console.log('Error while Login user');
      console.log(error);
      return res.status(500).json({
       success:false,
@@ -324,9 +343,9 @@ exports.changePassword = async (req, res) => {
             return res.status(500).json({
                 success: false,
                 message: "Error occurred while sending email",
-                error: error.message,
             });
         }
+
 
 
         // return success response
@@ -342,7 +361,7 @@ exports.changePassword = async (req, res) => {
         res.status(500).json({
             success: false,
             error: error.message,
-            messgae: 'Error while changing passowrd'
+            message: 'Error while changing passowrd'
         })
     }
 }
