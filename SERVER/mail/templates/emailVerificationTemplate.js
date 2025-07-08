@@ -63,13 +63,11 @@ const otpTemplate = (otp, name) => {
 				font-weight: bold;
 			}
 		</style>
-	
 	</head>
-	
 	<body>
 		<div class="container">
 			<a href=""><img class="logo"
-					src="https://i.ibb.co/7Xyj3PC/logo.png" alt="StudyNotion Logo"></a>
+					src="https://i.ibb.co/zV9msTH9/email.png" alt="StudyNotion Logo"></a>
 			<div class="message">OTP Verification Email</div>
 			<div class="body">
 				<p>Dear ${name}</p>
@@ -80,7 +78,7 @@ const otpTemplate = (otp, name) => {
 				Once your account is verified, you will have access to our platform and its features.</p>
 			</div>
 			<div class="support">If you have any questions or need assistance, please feel free to reach out to us at <a
-					href="mailto:gadeaniruddha2@gmail.com">gadeaniruddha2@gmail.com</a>. We are here to help!</div>
+				href="abhishetiwari59@gmail.com">abhishetiwari59@gmail.com</a>. We are here to help!</div>
 		</div>
 	</body>
 	

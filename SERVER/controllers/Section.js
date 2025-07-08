@@ -1,5 +1,6 @@
 const Course = require('../models/Course');
 const Section = require('../models/section');
+const mongoose = require('mongoose');
 
 
 exports.createSection = async (req,res)=>{
@@ -7,6 +8,8 @@ exports.createSection = async (req,res)=>{
 
         //data fetch
        const{sectionName,courseId} = req.body;
+            //   console.log('sectionName, courseId = ', sectionName, ",  = ", courseId)
+
         //data validation
         if(!sectionName || !courseId){
             return res.status(400).json({
@@ -15,6 +18,14 @@ exports.createSection = async (req,res)=>{
             });
         }
         
+
+         // Validate courseId format
+        if (!mongoose.Types.ObjectId.isValid(courseId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid courseId. Must be a 24-character hex string."
+            });
+        }
         //create section
         const  newSection = await  Section.create({sectionName});
 

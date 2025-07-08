@@ -1,10 +1,11 @@
-const Category = require('../models/category')
+const Category = require('../models/Category')
 
 //handler function of create category
 exports.createCategory = async(req,res)=>{
       try{
+
         //fetch data
-        const {name,description} = new Tag(req.body);
+        const {name,description} =  req.body;
 
         //validation of data
         if(!name || !description){
@@ -15,11 +16,11 @@ exports.createCategory = async(req,res)=>{
         }
 
         //creating an entry in the db
-        const  categoryDetails = await  Tag.create({
+        const  categoryDetails = await  Category.create({
               name:name,
               description:description,
         });
-        // console.log(categoryDetails);
+        console.log(categoryDetails);
 
 
          //return  res 
@@ -38,6 +39,8 @@ exports.createCategory = async(req,res)=>{
         })
     }
 }
+
+
 //delete Categories
 exports.deleteCategory = async (req, res) => {
     try {

@@ -1,36 +1,28 @@
  const Profile = require("../models/profile");
-const  User = require("../models/user");
+const User = require("../models/User")
 const CourseProgress = require('../models/courseProgress')
 const Course = require('../models/Course')
+const { uploadImageToCloudinary, deleteResourceFromCloudinary } = require('../utils/imageUploader');
  
-exports.updateProfile =  async(req,res)=>{
+exports.updateProfile1 =  async(req,res)=>{   //hamne isme just kuchh chnages kie for experiment
 
     try{
 
         //get the data
          const { gender = '', dateOfBirth = "", about = "", contactNumber = '', firstName, lastName } = req.body;
-
+         
         //get userID
-        const id = req.user.id;
+        const userId = req.user.id;
 
-        //----------------------
-        //validation
-        if(!contactNumber || !gender){
-            return res.status(400).json({
-                success:false,
-                message:'All fields are required',
-            });
-        }
-    //---------------------------------
         //find  profile
-        const userDetails = await User.findById(id);
+        const userDetails = await User.findById(userId);
         const profileId = userDetails.additionalDetails;
         const profileDetails = await Profile.findById(profileId);
 
    // console.log('User profileDetails -> ', profileDetails);
 
 
-        //update profile fields
+      
 
          // Update the profile fields
         userDetails.firstName = firstName;
@@ -49,7 +41,7 @@ exports.updateProfile =  async(req,res)=>{
          .populate({
         path: 'additionalDetails'
             })
-   // console.log('updatedUserDetails -> ', updatedUserDetails);
+   console.log('updatedUserDetails -> ', updatedUserDetails);
 
 
         //return response
@@ -71,6 +63,51 @@ exports.updateProfile =  async(req,res)=>{
     }
 
 }
+
+
+exports.updateProfile = async (req, res) => {
+    try {
+        const { gender, dateOfBirth, about, contactNumber, firstName, lastName } = req.body;
+
+        // Get user ID from the auth middleware
+        const userId = req.user.id;
+
+        // Find user and profile
+        const userDetails = await User.findById(userId);
+        const profileId = userDetails.additionalDetails;
+        const profileDetails = await Profile.findById(profileId);
+
+        // Update user fields only if they are provided
+        if (firstName) userDetails.firstName = firstName;
+        if (lastName) userDetails.lastName = lastName;
+        await userDetails.save();
+
+        // Update profile fields only if they are provided
+        if (dateOfBirth) profileDetails.dateOfBirth = dateOfBirth;
+        if (about) profileDetails.about = about;
+        if (gender) profileDetails.gender = gender;
+        if (contactNumber) profileDetails.contactNumber = contactNumber;
+        await profileDetails.save();
+
+        // Fetch updated data
+        const updatedUserDetails = await User.findById(userId).populate("additionalDetails");
+
+        return res.status(200).json({
+            success: true,
+            updatedUserDetails,
+            message: "Profile updated successfully",
+        });
+
+    } catch (error) {
+        console.log("Error while updating profile", error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            message: "Error while updating profile",
+        });
+    }
+};
+
 
 //to can we schedule the business logic of thhis hanlder untion
 //delete Account
@@ -156,18 +193,19 @@ exports.getUserDetails = async (req, res) => {
 
 // Update User profile Image
 exports.updateUserProfileImage = async (req, res) => {
+    console.log("chalo danger zone me ghuste hai ")
     try {
-        const profileImage = req.files?.profileImage;
+        const profileImage = req.files.profileImage;
         const userId = req.user.id;
 
         // validation
-        // console.log('profileImage = ', profileImage)
+        console.log('profileImage = ', profileImage)
 
         // upload imga eto cloudinary
         const image = await uploadImageToCloudinary(profileImage,
             process.env.FOLDER_NAME, 1000, 1000);
 
-        // console.log('image url - ', image);
+        console.log('image url - ', image);
 
         // update in DB 
         const updatedUserDetails = await User.findByIdAndUpdate(userId,

@@ -1,8 +1,8 @@
-const  Course = require("../models/user");
-const Category = require("../models/category");
+const  Course = require("../models/Course");
+const Category = require("../models/Category");
 const Section = require('../models/section');
 const SubSection = require('../models/subSection')
-const User = require("../models/user");
+const User = require("../models/User");
 const {uploadImageToCloudinary,deleteResourceFromCloudinary} = require("../utils/imageUploader");
 const { convertSecondsToDuration } = require("../utils/secToDuration")
 
@@ -12,7 +12,7 @@ exports.createCourse = async(req,res)=>{
     try{
       
         //fetch all data
-        const{courseName,courseDescription,whatYouWillLearn,price,category, instructions: _instructions, status, tag: _tag} = req.body;
+        let{courseName,courseDescription,whatYouWillLearn,price,category, instructions: _instructions, status, tag: _tag} = req.body;
          
 
          // Convert the tag and instructions from stringified Array to Array
@@ -24,10 +24,10 @@ exports.createCourse = async(req,res)=>{
 
 
         //get Thumbnail
-        const thumbnail =  req.files?.thumbnailImage;
+        const thumbnail =  req.files.thumbnailImage;
         
         //validation
-        if(!courseName || !courseDescription || !!whatYouWillLearn || !price || !tag || !thumbnail){
+        if(!courseName || !courseDescription || !whatYouWillLearn || !price || !tag || !thumbnail){
             return res.status(400).json({
                 success:false,
                 message:"Please fill all fields"
@@ -55,18 +55,6 @@ exports.createCourse = async(req,res)=>{
         const thumbnailDetails = await uploadImageToCloudinary(thumbnail, process.env.FOLDER_NAME);
 
 
-//--------------------------------------------------        
-                //check for instructor details
-                const userId  = req.user.id;
-                const instructorDetails = await User.findById(userId);
-                console.log("Instructor Details",instructorDetails)
-                        if(!instructorDetails){
-            return res.status(400).json({
-                success:false,
-                message:"Instructor Details not found",
-        });
-    }
-//----------------------------------------------
 
     //create an entry for new Course
      const newCourse = await Course.create({
@@ -79,7 +67,7 @@ exports.createCourse = async(req,res)=>{
         status,
         tag,
         instructions,
-        thumbnail:thumbnailImage.secure_url,
+        thumbnail:thumbnailDetails.secure_url,
         createdAt:Date.now(),
      });
  
@@ -122,6 +110,7 @@ exports.createCourse = async(req,res)=>{
 
 
     }catch(error){
+        // console.log("error aa gaya");
         console.log(error);
         return res.status(500).json({
         success:false,
@@ -170,7 +159,7 @@ exports.getCourseDetails = async(req,res)=>{
         //get the course id
         const {courseId} = req.body;
         // find  the course details
-        const courseDetails = await Course.find(
+        const courseDetails = await Course.findOne(
             {_id:courseId})
             .populate(
                 {
@@ -181,7 +170,7 @@ exports.getCourseDetails = async(req,res)=>{
                 }
             )
           .populate("category")
-          .populate("ratingAndreviews")
+          .populate("ratingAndReviews")
           .populate({
             path:"courseContent",
             populate:{
@@ -200,7 +189,7 @@ exports.getCourseDetails = async(req,res)=>{
             })  
         }
 
-  
+        console.log('courseDetails -> ', courseDetails)
             let totalDurationInSeconds = 0
         courseDetails.courseContent.forEach((content) => {
             content.subSection.forEach((subSection) => {

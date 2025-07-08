@@ -1,4 +1,4 @@
-const User = require("../models/user");
+const User = require("../models/User");
 const Profile = require('./../models/profile');
 const OTP = require("../models/OTP");
 const optGenerator = require("otp-generator");
@@ -20,8 +20,9 @@ exports.sendOTP = async (req, res) => {
     //check if user already exists
     const checkUserPresent = await User.find({ email });
 
+
     //exist ->Yes
-    if (checkUserPresent) {
+    if (checkUserPresent.length > 0) {
       return res.status(401).json({
         success: false,
         message: "User already exists",
@@ -30,35 +31,20 @@ exports.sendOTP = async (req, res) => {
 
     //exist -> No
     var otp = optGenerator.generate(6,{
-        upperCaseAlphabet:false,
-        lowerCaseALphabet:false,
+         digits:true,
+        upperCaseAlphabets:false,
+        lowerCaseAlphabets:false,
         specialChars:false,
     })
 
 
     // console.log("OTP generated: "+otp);
        const name = email.split('@')[0].split('.').map(part => part.replace(/\d+/g, '')).join(' ');
-      console.log(name);
+      // console.log(name);
 
           // send otp in mail
         await mailSender(email, 'OTP Verification Email', otpTemplate(otp, name));
 
-
-    //-------------------------------------------
-   //Check weather the otp is Unique or not
-   const result = await otp.findOne({otp:otp});
-   while(result){
-    otp =optGenerator.generate(6,{   //chnage here
-        upperCaseAlphabet:false,
-        lowerCaseALphabet:false,
-        specialChars:false, 
-    })
-    result = await OTP.findOne({otp:otp});
-   }
-
-
-   //-------------------------------------------
- 
 
   
 
@@ -130,14 +116,16 @@ exports.signUp = async(req,res) =>{
     if(checkUserAlreadyExits){
         return res.status(400).json({
              success:false,
-                message:"User is already registered. Please log in instead.",
+                message:"User is already registered. Please log in .",
 
         })
     }
 
         //Step 4.find the most recent otp for the   user
-        const recentOtp = await OTP.find({email}).sort({createdAt:-1}).limit(1);
-        //  console.log(recentOtp);
+        const recentOtp = await OTP.findOne({email}).sort({createdAt:-1}).limit(1);
+        // console.log("recent otp is "+recentOtp[0].otp); //bu mistake hamne find()  use kra tha jo ek array return karta hai usko access karne ke lie to hame uske index pe jo object store hai usko to access karna padega hi n
+         console.log("otp is "+otp);
+         console.log("otp resent is "+recentOtp.otp);
 
              // if otp not found
        if (!recentOtp || recentOtp.length == 0) {
@@ -191,6 +179,7 @@ const profileDetails =await  Profile.create({
           return res.status(200).json({
             success:true,
             message: 'User is registered Successfully',
+            userData:userData,
           })
     }catch(error){
          console.log('Error while registering user (signup)');
@@ -219,13 +208,15 @@ exports.login =  async(req,res) =>{
       });
     }
       //step 3 check user exist or not
-      const user = await User.findOne({email}).populate("additionalDetails");
+      let user = await User.findOne({email}).populate("additionalDetails");
        if(!user){
         return res.status(401).json({
           success:false,
           message:"User does not exist , please try again",
         });
        }
+      //  console.log("password is "+password);
+      //  console.log("user password is "+user.password);
       //step.4 Generate jwt token ,after  password matching 
       if(await bcrypt.compare(password,user.password)){
 
