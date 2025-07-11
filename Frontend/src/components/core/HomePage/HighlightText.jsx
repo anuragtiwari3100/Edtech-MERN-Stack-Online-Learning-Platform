@@ -1,8 +1,12 @@
 import React from 'react'
 
-const HighlightText = () => {
+const HighlightText = ({ text }) => {
   return (
-    <div>HighlightText</div>
+    <span className='font-bold text-richblue-200 gradient_color'>
+      {" "}
+      {text}
+        {" "}
+    </span>
   )
 }
 
