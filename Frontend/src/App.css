@@ -5,9 +5,19 @@
 
 html ,body {
     overflow-x: hidden;
-     scroll-behavior: smooth; /* for smooth scrolling */
-    /* height: 100%; */
-    margin: 0;
-    padding: 0;
+     scroll-behavior: smooth;
+  
 
+}
+
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* use in homePage */
+.homepage_bg {
+  background: url('../src//assets/Images/bghome.svg');
 }
