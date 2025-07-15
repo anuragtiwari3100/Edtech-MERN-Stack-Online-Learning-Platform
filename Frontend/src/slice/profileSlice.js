@@ -1,20 +1,15 @@
 import { createSlice } from "@reduxjs/toolkit"
 
 const initialState = {
-    user:null,
-   
+    user: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null,
+    loading: false,
 };
 
-
-
-//yaha pe aisa ho raha tha n ki pehle me are data ko null mark kara 
-// Problem: Page refresh pe user null ho ja raha tha
-// Is wajah se login/signup button ya dashboard dropdown dikh nahi raha tha
-// Reason: Redux state empty ho jaati hai refresh ke baad
-
-// Solution: localStorage se user aur token get kar lo
-// agar value mile toh use set karo, warna null raho
-
+// Problem occured and solved
+// initially i mark user data as nulll
+// as i refresh the page user becomes null , so login / signup buttons are not visible - In case of user not logged
+// case - User logged but as i refresh , dashboard dropdown becomes invisible
+// solution - try getting value from localStorage otherwise mark it as null
 
 
 const profileSlice = createSlice({
@@ -24,6 +19,9 @@ const profileSlice = createSlice({
         setUser(state, value) {
             state.user = value.payload;
         },
+        setLoading(state, value) {
+            state.loading = value.payload
+        }
     },
 });
 
