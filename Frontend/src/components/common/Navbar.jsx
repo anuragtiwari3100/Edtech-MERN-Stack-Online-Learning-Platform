@@ -9,7 +9,7 @@ import { useSelector } from "react-redux";
 import {AiOutlineShoppingCart}  from "react-icons/ai";
 import ProfileDropDown  from "../core/Auth/ProfileDropDown"
 import {apiConnector}  from "../../services/apiConnector"
-import {categories}  from "../../services/apis"
+// import {categories}  from "../../services/apis"
 import { title } from "framer-motion/client";
 import { MdKeyboardArrowDown } from "react-icons/md"
 
@@ -29,12 +29,12 @@ const subLinks = [
 
 const Navbar = () => {
 
-    // const{token} = useSelector((state) => state.auth);
-    const token = null;
-    // const{user} = useSelector((state) => state.profile);
-    const user = {
-      accountType:"Student",
-    }
+    const{token} = useSelector((state) => state.auth);
+    // const token = null;
+    const{user} = useSelector((state) => state.profile);
+    // const user = {
+    //   accountType:"Student",
+    // }
     const{totalItems} = useSelector((state) => state.cart);
 
   const location = useLocation();
@@ -124,44 +124,50 @@ const Navbar = () => {
           </ul>
 
   
-          {/* Login/SignUp Dashboard */}
-            <div>
-               {
-                user && user?.accountType != "Instructor" && (
-                  <Link to="/dashboard/cart" className="relative">
-                   <AiOutlineShoppingCart className="text-[2.35rem] text-richblack-5 hover:bg-richblack-700 rounded-full p-2 duration-200" />
-                   {
-                    totalItems > 0 && (
-                     <span className="absolute -bottom-2 -right-2 grid h-5 w-5 place-items-center overflow-hidden rounded-full bg-richblack-600 text-center text-xs font-bold text-yellow-100">
-                        {totalItems}
-                      </span>
-                    )
-                   }
-                   {
-                    token === null && (
-                      <Link to="/login">
-                        <button className=' px-[12px] py-[8px] text-richblack-100 rounded-md '>
-                          Log in
-                        </button>
-                        </Link>
-                    )
-                   }
-                   {
-                    token === null && (
-                      <Link to="/signup">
-                        <button className="px-[12px] py-[8px] text-richblack-100 rounded-md ">
-                          Sign Up
-                        </button>
-                      </Link>
-                    )
-                   }
-                   {
-                    token !== null  && <ProfileDropDown/>
-                   }
-                  </Link>
-                )
-               }
-            </div>
+       
+                {/* Login/SignUp/Dashboard */}
+                <div className='flex gap-x-4 items-center'>
+                    {
+                        user && user?.accountType === "Student" && (
+                            <Link to="/dashboard/cart" className="relative">
+                                <AiOutlineShoppingCart className="text-[2.35rem] text-richblack-5 hover:bg-richblack-700 rounded-full p-2 duration-200" />
+                                {totalItems > 0 && (
+                                    <span className="absolute -bottom-2 -right-2 grid h-5 w-5 place-items-center overflow-hidden rounded-full bg-richblack-600 text-center text-xs font-bold text-yellow-100">
+                                        {totalItems}
+                                    </span>
+                                )}
+                            </Link>
+                        )
+                    }
+                    {
+                        token  != null && (
+                            <Link to="/login">
+                                {/* <button className='border border-richblack-700 bg-richblack-800 px-[12px] py-[8px] text-richblack-100 rounded-md focus:outline-8 outline-yellow-50'> */}
+                                <button className={` px-[12px] py-[8px] text-richblack-100 rounded-md 
+                                 ${matchRoute('/login') ? 'border-[2.5px] border-yellow-50' : 'border border-richblack-700 bg-richblack-800'} `}
+                                >
+                                    Log  in
+                                </button>
+                            </Link>
+                        )
+                    }
+                    {
+                        token  != null && (
+                            <Link to="/signup">
+                                {/* <button className='border border-richblack-700 bg-richblack-800 px-[12px] py-[8px] text-richblack-100 rounded-md'> */}
+                                <button className={` px-[12px] py-[8px] text-richblack-100 rounded-md 
+                                 ${matchRoute('/signup') ? 'border-[2.5px] border-yellow-50' : 'border border-richblack-700 bg-richblack-800'} `}
+                                >
+                                    Sign Up
+                                </button>
+                            </Link>
+                        )
+                    }
+
+    
+
+                </div>
+
 
 
             
