@@ -2,10 +2,8 @@ import React, { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 
 import CountryCode from '../../../../data/countrycode.json'
-
-
-
-//Q.useForm hook kaise btter hai noramla form handling se aur ye kaise state ko optimally manage aar ta hai
+// import { apiConnector } from "../../../services/apiConnector"
+// import { contactusEndpoint } from "../../../services/apis"
 
 
 const ContactUsForm = () => {
@@ -52,16 +50,16 @@ const ContactUsForm = () => {
       onSubmit={handleSubmit(submitContactForm)}
     >
       <div className="flex flex-col gap-5 lg:flex-row">
-        <div className="flex flex-col gap-2 lg:w-[48%]  ">
+        <div className="flex flex-col gap-2 lg:w-[48%]">
           <label htmlFor="firstname" className="lable-style">
             First Name
           </label>
           <input
-            type=" text"
+            type="text"
             name="firstname"
             id="firstname"
             placeholder="Enter first name"
-             className="form-style rounded-md text-black"
+            className="form-style"
             {...register("firstname", { required: true })}
           />
           {errors.firstname && (
@@ -80,7 +78,7 @@ const ContactUsForm = () => {
             name="lastname"
             id="lastname"
             placeholder="Enter last name"
-            className="form-style  rounded-md  text-black"
+            className="form-style"
             {...register("lastname")}
           />
         </div>
@@ -95,7 +93,7 @@ const ContactUsForm = () => {
           name="email"
           id="email"
           placeholder="Enter email address"
-          className="form-style  rounded-md  text-black"
+          className="form-style"
           {...register("email", { required: true })}
         />
         {errors.email && (
@@ -117,7 +115,7 @@ const ContactUsForm = () => {
               name="firstname"
               id="firstname"
               placeholder="Enter first name"
-              className="form-style  rounded-md  text-black"
+              className="form-style"
               {...register("countrycode", { required: true })}
             >
               {CountryCode.map((ele, i) => {
@@ -135,8 +133,8 @@ const ContactUsForm = () => {
               type="number"
               name="phonenumber"
               id="phonenumber"
-              placeholder="6204837397"
-              className="form-style  rounded-md  text-black"
+              placeholder="12345 67890"
+              className="form-style"
               {...register("phoneNo", {
                 required: {
                   value: true,
@@ -148,7 +146,6 @@ const ContactUsForm = () => {
             />
           </div>
         </div>
-
         {errors.phoneNo && (
           <span className="-mt-1 text-[12px] text-yellow-100">
             {errors.phoneNo.message}
@@ -166,7 +163,7 @@ const ContactUsForm = () => {
           cols="30"
           rows="7"
           placeholder="Enter your message here"
-          className="form-style  rounded-md  text-black"
+          className="form-style"
           {...register("message", { required: true })}
         />
         {errors.message && (
