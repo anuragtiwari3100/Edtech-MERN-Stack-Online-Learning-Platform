@@ -17,7 +17,7 @@ exports.capturedPayment =  async(req,res)=>{
    
    
 
-     //get COurse id  and user id
+     //get Course id  and user id
      const{coursesId} = req.body;
     // console.log('coursesId = ', typeof (coursesId))
     // console.log('coursesId = ', coursesId)
@@ -49,6 +49,7 @@ exports.capturedPayment =  async(req,res)=>{
 
             totalAmount += course.price;
         }
+        
         catch (error) {
             console.log(error);
             return res.status(500).json({ success: false, message: error.message });
@@ -84,7 +85,6 @@ exports.capturedPayment =  async(req,res)=>{
                 success:false,
                 message:'Could not initiate order'
             })
-
          }
 };
 
@@ -201,6 +201,8 @@ exports.sendPaymentSuccessEmail = async (req, res) => {
         return res.status(500).json({ success: false, message: "Could not send email" })
     }
 }
+
+ //   Using web hook but the  drawback is it will onky for  one payment we wan  payemt for our cart not for a single payment
 //  verify Signature 
 // exports.verifySignature = async (req, res) => {
 //     const webhookSecret = '12345678';

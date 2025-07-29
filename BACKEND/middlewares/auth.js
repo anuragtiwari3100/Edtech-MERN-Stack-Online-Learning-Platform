@@ -13,7 +13,7 @@ const User = require("../models/User");
          //Step 1. Extract token
          const  token = req.cookies.token
                         || req.body.token
-                         || req.header("Authorisation").replace("Bearer ","");
+                         || req.header("Authorization").replace("Bearer ","");   //Galat header key 'Sation' ko 'Authorization' se replace kiya and token safely extract kiya
                //if token missing , then return   
                if(!token){
                 return res.status(401).json({
