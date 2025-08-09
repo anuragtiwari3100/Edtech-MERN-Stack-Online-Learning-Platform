@@ -1,76 +1,95 @@
+import React, { useState, useEffect } from 'react'
+import { Link, matchPath, useLocation } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 
-import React, { useEffect, useState }  from "react";
-import logo from  "../../assets/Logo/Logo-Full-Light.png";
+import { NavbarLinks } from "../../../data/navbar-links"
+import studyNotionLogo from '../../assets/Logo/Logo-Full-Light.png'
+import { fetchCourseCategories } from './../../services/operations/courseDetailsAPI';
 
-import { Link, matchPath } from "react-router-dom";
-import { useLocation } from "react-router-dom";
-import { NavbarLinks } from './../../../data/navbar-links';
-import { useSelector } from "react-redux";
-import {AiOutlineShoppingCart}  from "react-icons/ai";
-import ProfileDropDown  from "../core/Auth/ProfileDropDown"
-import {apiConnector}  from "../../services/apiConnector"
-// import {categories}  from "../../services/apis"
-import { title } from "framer-motion/client";
+import ProfileDropDown from '../core/Auth/ProfileDropDown'
+import MobileProfileDropDown from '../core/Auth/MobileProfileDropDown'
+
+import { AiOutlineShoppingCart } from "react-icons/ai"
 import { MdKeyboardArrowDown } from "react-icons/md"
 
 
 
-const subLinks = [
-      {
-        title:"python",
-        link:"/catalog/python"
-      },
-      {
-        title:"web Dev",
-        link:"/catalog/web-dev"
-      },
-]
+
 
 
 const Navbar = () => {
-
     const{token} = useSelector((state) => state.auth);
-    // const token = null;
     const{user} = useSelector((state) => state.profile);
-    // const user = {
-    //   accountType:"Student",
-    // }
     const{totalItems} = useSelector((state) => state.cart);
-
-  const location = useLocation();
-
-
-  // const[subLinks,setSubLinks] = useState([]);
-  // const fetchSublinks =async() =>{
-  //         try{
-  //             const result = await apiConnector("GET",categories.CATEGORIES_API);
-  //             console.log("Printing Sublinks result ",result);
-  //             setSubLinks(result.data.data);
-  //         }catch(error){
-  //             console.log("Couldn't fetch catagory list"+error);
-  //         }
-  //      }
-
-  // useEffect(()=>{
-  //     //  fetchSublinks();
-  // },[])
+    const location = useLocation();
+     const [subLinks, setSubLinks] = useState([]);
+    const [loading, setLoading] = useState(false);
 
 
+    const fetchSublinks = async () => {
+        try {
+            setLoading(true)
+            const res = await fetchCourseCategories();
+            // const result = await apiConnector("GET", categories.CATEGORIES_API);
+            // const result = await apiConnector('GET', 'http://localhost:4000/api/v1/course/showAllCategories');
+            // console.log("Printing Sublinks result:", result);
+            setSubLinks(res);
+        }
+        catch (error) {
+            console.log("Could not fetch the category list = ", error);
+        }
+        setLoading(false)
+    }
+
+
+  useEffect(()=>{
+       fetchSublinks();
+  },[])
+
+
+ // when user click Navbar link then it will hold yellow color 
   const matchRoute = (route) =>{
     return matchPath({path:route}, location.pathname);
   }
 
+
+      // when user scroll down , we will hide navbar , and if suddenly scroll up , we will show navbar 
+  const [showNavbar, setShowNavbar] = useState('top');
+ const [lastScrollY, setLastScrollY] = useState(0);
+
+     useEffect(() => {
+        window.addEventListener('scroll', controlNavbar);
+
+        return () => {
+            window.removeEventListener('scroll', controlNavbar);
+        }
+    },)
+  
+
+
+   // control Navbar
+    const controlNavbar = () => {
+        if (window.scrollY > 200) {
+            if (window.scrollY > lastScrollY)
+                setShowNavbar('hide')
+
+            else setShowNavbar('show')
+        }
+
+        else setShowNavbar('top')
+
+        setLastScrollY(window.scrollY);
+    }
 
   return (
     <nav  className={`z-[10] flex h-14 w-full items-center justify-center border-b-[1px] border-b-richblack-700 text-white translate-y-0 transition-all`}>
       <div className="flex w-11/12 max-w-maxContent items-center justify-between">
         {/* Logo */}
         <Link to="/">
-          <img src={logo}  width={160} height={42} loading='lazy' />
+          <img src={studyNotionLogo}  width={160} height={42} loading='lazy' />
         </Link>
 
         {/* NavLink - visible for only large devices*/}
-     
                 <ul className='hidden sm:flex gap-x-6 text-richblack-25'>
                     {
                         NavbarLinks.map((link, index) => (
@@ -139,14 +158,14 @@ const Navbar = () => {
                             </Link>
                         )
                     }
-                    {
-                        token  != null && (
+                     {
+                        token === null && (
                             <Link to="/login">
                                 {/* <button className='border border-richblack-700 bg-richblack-800 px-[12px] py-[8px] text-richblack-100 rounded-md focus:outline-8 outline-yellow-50'> */}
                                 <button className={` px-[12px] py-[8px] text-richblack-100 rounded-md 
                                  ${matchRoute('/login') ? 'border-[2.5px] border-yellow-50' : 'border border-richblack-700 bg-richblack-800'} `}
                                 >
-                                    Log  in
+                                    Log in
                                 </button>
                             </Link>
                         )
@@ -163,14 +182,33 @@ const Navbar = () => {
                             </Link>
                         )
                     }
+                        {
+                        token === null && (
+                            <Link to="/signup">
+                                {/* <button className='border border-richblack-700 bg-richblack-800 px-[12px] py-[8px] text-richblack-100 rounded-md'> */}
+                                <button className={` px-[12px] py-[8px] text-richblack-100 rounded-md 
+                                 ${matchRoute('/signup') ? 'border-[2.5px] border-yellow-50' : 'border border-richblack-700 bg-richblack-800'} `}
+                                >
+                                    Sign Up
+                                </button>
+                            </Link>
+                        )
+                    }
 
     
+                
+
+                
+                    {/* for large devices */}
+                    {token !== null && <ProfileDropDown />}
+
+                    {/* for small devices */}
+                    {token !== null && <MobileProfileDropDown />}
+
+
+
 
                 </div>
-
-
-
-            
       </div>
     </nav>
   );
