@@ -1,7 +1,7 @@
 # <h1>📘 EdTech MERN Stack Online Learning Platform<h1>
 
 
-[![EdTech Banner](img1.png)]([https://www.myedtechsite.com](https://studynotion-frontend.vercel.app/))
+[![EdTech Banner](img1.png)](https://studynotion-frontend.vercel.app/)
 
 
 An advanced full-stack **MERN** online learning platform — inspired by platforms like StudyNotion and Udemy — allowing **students**, **instructors**, and **admins** to seamlessly interact with educational content.
